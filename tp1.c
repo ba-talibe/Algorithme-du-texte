@@ -70,3 +70,13 @@ int isInTrie(Trie tri, char *word){
     }
     return tri->finite[etat];
 }
+
+
+List createList(int startNode, int targetNode, unsigned char letter){
+    List list = (List)malloc(sizeof(List));
+    list->startNode = startNode;
+    list->targetNode = targetNode;
+    list->letter = letter;
+    list->next = NULL;
+    return list;
+}

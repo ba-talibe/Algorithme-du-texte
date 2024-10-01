@@ -33,3 +33,9 @@ typedef struct _list *List;
 Trie createTrie(int maxNode);
 void  insertInTrie(Trie tri, char *word);
 int isInTrie(Trie tri, char *word);
+
+List createList(int startNode, int targetNode, unsigned char letter);
+
+void insertInList(List *list, int startNode, int targetNode, unsigned char letter);
+
+int isInList(List list, int startNode, unsigned char letter);
