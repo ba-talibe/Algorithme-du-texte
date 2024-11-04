@@ -18,7 +18,6 @@ Trie createTrie(int maxNode){
     for (int i = 0; i < LEN_ETAT; i++) {
         table[i] = (int *)malloc(LEN_ALPHA * sizeof(int));
     }
-
     for (int i = 0; i < LEN_ETAT; i++) {
         for (int j = 0; j < LEN_ALPHA; j++) {
             table[i][j] = 0;
