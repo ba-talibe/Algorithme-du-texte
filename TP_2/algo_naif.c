@@ -1,4 +1,4 @@
-#include "tp2.h"
+#include "algo_naif.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> 
@@ -131,20 +131,4 @@ int algo_naif_strncomp_avec_boucle_rapide_avec_santinelle(char *texte, char *mot
         i++;
     }
     return -1;
-}
-
-
-int fonction_prefix(char *motif, int i){
-    int j = 0;
-    int periode = 0;
-    while(j < i){
-        if (motif[i] == motif[j]){
-            return j + 1;
-        }
-    }
-    return j;
-}
-
-int algo_morris_pratt(char *texte, char *motif){
-    int table_prefix [strlen(motif)];
 }

@@ -21,27 +21,22 @@ CFLAGS  = -g -Wall
 #
 default: main
 
-# To create the executable file count we need the object files
-# countwords.o, counter.o, and scanner.o:
-#
-main:  main.o tp2.o 
-	$(CC) $(CFLAGS) -o main main.o tp2.o
 
-# To create the object file countwords.o, we need the source
-# files countwords.c, scanner.h, and counter.h:
-#
-main.o:  main.c tp2.h
+main:  main.o algo_naif.o algo_rapide.o 
+	$(CC) $(CFLAGS) -o main main.o algo_naif.o algo_rapide.o
+
+
+main.o:  main.c algo_naif.h algo_rapide.h
 	$(CC) $(CFLAGS) -c main.c
 
-# To create the object file counter.o, we need the source files
-# counter.c and counter.h:
-#
-tp2.o:  tp2.c tp2.h 
-	$(CC) $(CFLAGS) -c tp2.c
 
-# To create the object file scanner.o, we need the source files
-# scanner.c and scanner.h:
-#
+algo_naif.o:  algo_naif.c algo_naif.h 
+	$(CC) $(CFLAGS) -c algo_naif.c
+
+algo_rapide.o:  algo_rapide.c algo_rapide.h 
+	$(CC) $(CFLAGS) -c algo_rapide.c
+
+
 
 clean: 
 	$(RM) count *.o *~
