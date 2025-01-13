@@ -1,32 +1,36 @@
 #include "trie.h"
 #include "queue.h"
 
-#define MAX_WORD_LENGTH 60
+#define MAX_WORD_SIZE 60
 #define MAX_WORDS 100
-#define MAX_TEXT_LENGTH 5000000
+#define MAX_TEXT_SIZE 5000000
 
 // Utilisation de la structure de hachage
 typedef struct _trie_hachage *Trie;
 
 
-
 void ajout_noeud(List *list, unsigned char caractere, int noeud) {
+    /*
+        Ajoute un noeud à la liste
+    */
     List copie = (List)malloc(sizeof(struct _list));
     copie->letter = caractere;	
     copie->target_node = noeud;
-   
 
     copie->next = *list;
     *list = copie;
 }
 
 int rechercher_noeud(List list, unsigned char l) {
+    /*
+        Recherche un noeud dans la liste
+    */
     List copie = list;
     while (copie != NULL) {
-    if (copie->letter == l) {
-        return copie->target_node;
-    }
-    copie = copie->next;
+        if (copie->letter == l) {
+            return copie->target_node;
+        }
+        copie = copie->next;
     }
     // aucune lettre trouvé
     return -1; 
@@ -34,6 +38,9 @@ int rechercher_noeud(List list, unsigned char l) {
 
 
 Queue create_queue() {
+    /* 
+        Création de la file
+    */
     Queue queue = (Queue)malloc(sizeof(struct _queue));
     queue->debut = NULL;
     queue->fin = NULL;
@@ -74,10 +81,11 @@ int recuperer_valeur(Queue queue) {
     return valeur;
 }
 
-/*****************************************************************************/
-/*                            Création du trie                               */
-/*****************************************************************************/
+
 Trie create_trie(int max_node) {
+    /*
+        Cree une trie
+    */
     int i;
     Trie trie = (Trie)malloc(sizeof(struct _trie_hachage));
     trie->transition = (List *)malloc(max_node * sizeof(struct _list));
@@ -114,36 +122,35 @@ void insert_trie(Trie trie, unsigned char *w) {
         if (copie == -1) {
 
         // verifier si le trie est plein
-        if (taille_mot - i > trie->max_node - trie->next_node) {
-        return; /* Quitter */
-        }
-        // insertion du mot
-        while (w[i] != '\0') {
-            List copie1 = (List)malloc(sizeof(struct _list));
-            copie1->target_node = trie->next_node;
-            copie1->letter = w[i];
-            copie1->next = trie->transition[noeud_courant];
-            trie->transition[noeud_courant] = copie1;
-            noeud_courant = trie->next_node;
-            trie->next_node = trie->next_node + 1;
-            i=i+1;
-        }
+            if (taille_mot - i > trie->max_node - trie->next_node) 
+                return;
+            // insertion du mot
+            while (w[i] != '\0') {
+                List copie1 = (List)malloc(sizeof(struct _list));
+                copie1->target_node = trie->next_node;
+                copie1->letter = w[i];
+                copie1->next = trie->transition[noeud_courant];
+                trie->transition[noeud_courant] = copie1;
+                noeud_courant = trie->next_node;
+                trie->next_node = trie->next_node + 1;
+                i=i+1;
+            }
         } else {
             noeud_courant = copie;
         }
-        i= i+1;
+        i++;
     }	
     // etat final
     trie->finite[noeud_courant] = 1;
-
 }
 
 
 void completer_trie(Trie trie) {
-    // recuperation de la liste des transitions
+    /*
+        Ajouter les transition qui vont vers la racine
+    */
     List list = trie->transition[0];
-    int i;
-    for (i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++) {
         if (rechercher_noeud(list, i) == -1) {
             ajout_noeud(&list, i, 0);
         }
@@ -153,10 +160,13 @@ void completer_trie(Trie trie) {
 
 
 Trans recuperer_transition(Trie trie,  int est_racine, int origine) {
+    /*
+        Recupere les transitions d'un noeud
+    */
     int dest_est_racine = est_racine ? -1 : 0;
 
     //  Initialisation de la liste des transitions 
-    Trans trans = NULL;
+    Trans transitions = NULL;
     List list = trie->transition[origine];
     // Récuperation et ajout des transition de la liste 
     while (list != NULL) {
@@ -164,23 +174,27 @@ Trans recuperer_transition(Trie trie,  int est_racine, int origine) {
             Trans copie = (Trans)malloc(sizeof(struct _transition));
             copie->vers = list->target_node;
             copie->origine = origine;
-            copie->prochain = trans;
+            copie->prochain = transitions;
             copie->letter = list->letter;
-            trans = copie;
+            transitions = copie;
             list = list->next;
         }
     }
-    return trans;
+    return transitions;
 }
 
 int destination_transition(Trie trie, int origine, unsigned char caractere) {
-    if (origine == -1) {return 0;}
+    if (origine == -1)
+        return 0;
     List list = trie->transition[origine]; // Récupération de la liste des transitions
     return rechercher_noeud(list, caractere);    // Recherche de la destination
 }
 
 
 void complete(Trie trie) {
+    /*
+        Completion des liens de suppléance
+    */
     unsigned char caractere;
     int origine=0, vers=0, s=0;
    
@@ -190,7 +204,7 @@ void complete(Trie trie) {
      // Création de la file
     Queue queue = create_queue();
 
-    // Fonction de supp pour les fils de la racine 'sons of the root'
+    // Fonction de suppleancre
     while (transitions != NULL) {
         vers = transitions->vers;
         transitions = transitions->prochain;
@@ -211,12 +225,12 @@ void complete(Trie trie) {
             ajout_valeur(queue, vers);
 
             s = trie->suppleant[origine];
-            /* Transition non définie */
+            //  Transition non définie 
             while (destination_transition(trie, s, caractere) == -1) {
                 s = trie->suppleant[s];
             }
             trie->suppleant[vers] = destination_transition(trie, s, caractere);
-            /* Fonction de sortie */
+            // Fonction de sortie 
             if (trie->finite[trie->suppleant[vers]]) {
                 trie->finite[vers] = 1;
             }
@@ -229,7 +243,6 @@ Trie Iniatil_AHO(unsigned char **mots, int nb_max) {
     /*
         Création du trie et complétion des transitions
     */
-
     Trie trie = create_trie(nb_max * 60);
 
     int i;
@@ -246,13 +259,17 @@ Trie Iniatil_AHO(unsigned char **mots, int nb_max) {
 
 
 void aho_corasick(unsigned char **mots, int nb_max, unsigned char *texte) {
-    int origine = 0, occurrence = 0, i=0;
+    /*
+        point d'entrée de l'algorithme d'Aho-Corasick
+    */
+    int origine = 0, occurrence = 0;
     // Création du trie
     Trie trie = Iniatil_AHO(mots, nb_max);
     // teste si le trie est vide
-    if (trie == NULL) {return; /* Quitter */}
+    if (trie == NULL) 
+        return;
     //recherche des mots dans le texte
-    for (i = 0; texte[i] != '\0'; i++) {
+    for (int i = 0; texte[i] != '\0'; i++) {
         // recherche de suppleant s'il n'y a pas de destination 
         while (destination_transition(trie, origine, texte[i]) == -1) {
             origine = trie->suppleant[origine];
@@ -275,51 +292,51 @@ int main(int argc, char **argv) {
         return EXIT_FAILURE;
     }
     
-    unsigned char * text = (unsigned char *)malloc(MAX_TEXT_LENGTH * sizeof(unsigned char));
+    unsigned char * text = (unsigned char *)malloc(MAX_TEXT_SIZE * sizeof(unsigned char));
     unsigned char *words[MAX_WORDS];
 
 
-    /* Lire les mots */
-    FILE* fileWords = fopen(argv[1], "r");
-        if (!fileWords) {
+    // Lecture des mots depuis le fichier
+    FILE* words_file = fopen(argv[1], "r");
+        if (!words_file) {
             perror("Erreur lors de la lecture du fichier de mots");
             return EXIT_FAILURE;
         }
 
-        int numWords = 0;
-        char buffer[MAX_WORD_LENGTH];
-        while (fgets(buffer, sizeof(buffer), fileWords) != NULL && numWords < MAX_WORDS) {
-            buffer[strcspn(buffer, "\n")] = '\0'; // Supprimer le saut de ligne
-            words[numWords] = (unsigned char *)strdup(buffer);
-            // printf("%s\n", words[numWords]);
-            numWords++;
+        int words_count = 0;
+        char tampon[MAX_WORD_SIZE];
+        while (fgets(tampon, sizeof(tampon), words_file) != NULL && words_count < MAX_WORDS) {
+            tampon[strcspn(tampon, "\n")] = '\0'; // Supprimer le saut de ligne
+            words[words_count] = (unsigned char *)strdup(tampon);
+            // printf("%s\n", words[words_count]);
+            words_count++;
         }
 
-    fclose(fileWords);
+    fclose(words_file);
 
     // Lire le texte depuis le fichier
-    FILE* fileText = fopen(argv[2], "r");
-        if (!fileText) {
+    FILE* text_file = fopen(argv[2], "r");
+        if (!text_file) {
             perror("Erreur lors de la lecture du fichier de texte");
             return EXIT_FAILURE;
         }
 
-        fseek(fileText, 0, SEEK_END);
-        long fileSize = ftell(fileText);
-        fseek(fileText, 0, SEEK_SET);
+        fseek(text_file, 0, SEEK_END);
+        long fileSize = ftell(text_file);
+        fseek(text_file, 0, SEEK_SET);
 
 
-        fread(text, 1, fileSize, fileText);
-    fclose(fileText);
+        fread(text, 1, fileSize, text_file);
+    fclose(text_file);
 
 
-    printf("####  Occurences et copies par listes d'adjacences  ####\n");
+    printf("Nombre d'occurences \n");
     clock_t debut = clock();
     
     // execution de aho_corasick
-    aho_corasick(words, numWords, text);
+    aho_corasick(words, words_count, text);
     clock_t fin = clock();
-    printf("Le copie d'exécution de cette recherche est : %f seconde(s)\n", (double) (fin - debut) / CLOCKS_PER_SEC);
+    printf("Durée d'exécution de la recherche est de : %f seconde(s)\n", (double) (fin - debut) / CLOCKS_PER_SEC);
 
     return 0;
 }

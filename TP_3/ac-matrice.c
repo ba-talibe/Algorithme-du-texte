@@ -1,7 +1,7 @@
 #include "trie.h"
 #include "queue.h"
 
-#define MAX_WORD_LENGTH 60
+#define MAX_WORD_SIZE 60
 #define MAX_WORDS 100
 #define MAX_TEXT_SIZE 5000000
 
@@ -9,15 +9,21 @@
 typedef struct _trie_matrice *Trie;
 
 
-void ajout_noeud(List *llist, unsigned char c, int noeud) {
+void ajout_noeud(List *llist, unsigned char caractere, int noeud) {
+    /*
+        Ajoute un noeud à la liste
+    */
     List copie = (List)malloc(sizeof(struct _list));
-    copie->letter = c;
+    copie->letter = caractere;
     copie->target_node = noeud;
     copie->next = *llist; // Insertion au début
     *llist = copie;
 }
 
 int rechercher_noeud(List list, unsigned char l) {
+    /*
+        Recherche un noeud dans la liste
+    */
     List copie = list;
     while (copie != NULL) {
         if (copie->letter == l) {
@@ -30,7 +36,9 @@ int rechercher_noeud(List list, unsigned char l) {
 }
 
 Queue create_queue() {
-    // Allocation de mémoire
+    /* 
+        Création de la file
+    */
     Queue queue = (Queue)malloc(sizeof(struct _queue)); 
     queue->debut = NULL;
     queue->fin = NULL;
@@ -116,7 +124,7 @@ void insert_trie(Trie mon_trie, unsigned char *w) {
 
 void completer_trie(Trie trie) {
     /*
-        Complerte de trie en ajoutant les transitions manquantes
+        Ajouter les transition qui vont vers la racine
     */
     for (int i = 0; i < 256; i++) { // 256 : caractères non signés
         if (trie->transition[0][i] == -1) trie->transition[0][i] = 0;
@@ -140,21 +148,24 @@ Trans recuperer_transition(Trie trie, int est_racine, int origine) {
     return transitions;
 }
 
-int destination_transition(Trie trie, int src, unsigned char c) {
-    return trie->transition[src][c]; // Retourner la destination
+int destination_transition(Trie trie, int src, unsigned char caractere) {
+    return trie->transition[src][caractere]; // Retourner la destination
 }
 
 
 
 void complete(Trie trie) {
-    unsigned char c;
+    /*
+        Completion des liens de suppléance
+    */
+    unsigned char caractere;
     int origine=0, vers=0, s=0;
         
-    /* Création de la file */
+    // Création de la file
     Queue queue = create_queue();
     /* Avoir les transition de la racine */
     Trans transitions = recuperer_transition(trie, 0, 0);
-    /* Fonction de supp pour les fils de la racine 'sons of the root '*/
+    // Fonction de suppleancre
     while (transitions != NULL) {
         vers = transitions->vers;
         transitions = transitions->prochain;
@@ -163,23 +174,23 @@ void complete(Trie trie) {
         /* Destination = racine*/
         trie->suppleant[vers] = 0;
     }
-    /* Récupérer les element a partir de la file, et exectuer la fonction de supp */
+    // execution de la fonction de supppleance sur elements de la file
     while (queue->taille != 0) {
         origine = recuperer_valeur(queue);
         transitions = recuperer_transition(trie, 1, origine);
         while (transitions != NULL) {
             origine = transitions->origine;
-            c = transitions->letter;
+            caractere = transitions->letter;
             vers = transitions->vers;
             transitions = transitions->prochain;
             ajout_valeur(queue, vers);
 
             s = trie->suppleant[origine];
-            /* Transition no définie */
-            while (destination_transition(trie, s, c) == -1) {
+            //  Transition no définie 
+            while (destination_transition(trie, s, caractere) == -1) {
                 s = trie->suppleant[s];
             }
-            trie->suppleant[vers] = destination_transition(trie, s, c);
+            trie->suppleant[vers] = destination_transition(trie, s, caractere);
             // Fonction de sortie
             if (trie->finite[trie->suppleant[vers]]) {
                 trie->finite[vers] = 1;
@@ -210,13 +221,17 @@ Trie Iniatil_AHO(unsigned char **mots, int nb_max) {
 
 
 void aho_corasick(unsigned char **mots, int nb_max, unsigned char *texte) {
-    int origine = 0, occurrence = 0, i=0;
+    /*
+        point d'entrée de l'algorithme d'Aho-Corasick
+    */
+    int origine = 0, occurrence = 0;
     // Création du trie
     Trie trie = Iniatil_AHO(mots, nb_max);
-    // teste si le trie est vide
-    if (trie == NULL) {return; /* Quitter */}
+    // Quitter si le trie est vide
+    if (trie == NULL) 
+        return;
     //recherche des mots dans le texte
-    for (i = 0; texte[i] != '\0'; i++) {
+    for (int i = 0; texte[i] != '\0'; i++) {
         // recherche de suppleant s'il n'y a pas de destination 
         while (destination_transition(trie, origine, texte[i]) == -1) {
             origine = trie->suppleant[origine];
@@ -251,7 +266,7 @@ int main(int argc, char **argv) {
         }
 
         int words_count = 0;
-        char tampon[MAX_WORD_LENGTH];
+        char tampon[MAX_WORD_SIZE];
         while (fgets(tampon, sizeof(tampon), words_file) != NULL && words_count < MAX_WORDS) {
             tampon[strcspn(tampon, "\n")] = '\0'; // Supprimer le saut de ligne
             words[words_count] = (unsigned char *)strdup(tampon);
