@@ -23,11 +23,3 @@ struct _queue {
 };
 typedef struct _queue *Queue;
 
-struct _list {
-    int start_node, /* etat de depart de la transition */
-    target_node; /* cible de la transition */
-    unsigned char letter; /* etiquette de la transition */
-    struct _list *next; /* maillon suivant */
-};
-
-typedef struct _list *List;

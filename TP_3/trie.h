@@ -3,11 +3,11 @@
 #include <string.h>
 #include <time.h>
 
-/* Includes de la structure list  */
 struct _list {
-  int target_node;	/* cible de la transition     */
-  unsigned char letter; /* etiquette de la transition */
-  struct _list *next;	/* maillon suivant            */
+    int start_node, /* etat de depart de la transition */
+    target_node; /* cible de la transition */
+    unsigned char letter; /* etiquette de la transition */
+    struct _list *next; /* maillon suivant */
 };
 
 typedef struct _list *List;
@@ -32,3 +32,4 @@ struct _trie_matrice {
   char *finite;	   		/* etats terminaux 			*/
   int *suppleant;		/* état de suppléance                  	*/
 };
+

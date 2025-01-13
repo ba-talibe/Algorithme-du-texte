@@ -39,18 +39,16 @@ Queue create_queue() {
 }
 
 
-void insert_queue(Queue queue, int valeur) {
+void ajout_valeur(Queue queue, int valeur) {
     /*
-        Insert une valeur dans la file
+        Ajoute une valeur à la file
     */
     if (queue->taille == 0) { 
-        // la file est vide
         queue->fin = (Element)malloc(sizeof(struct _element));
         queue->fin->valeur = valeur;
         queue->fin->prochain = NULL;
         queue->debut = queue->fin;
     } else { 
-        // la file n'est pas vide
         queue->fin->prochain = (Element)malloc(sizeof(struct _element));
         queue->fin->prochain->valeur = valeur;
         queue->fin->prochain->prochain = NULL;
@@ -73,17 +71,17 @@ Trie create_trie(int max_node) {
     /*
         Cree une trie
     */
-    int i, j;
+
     Trie trie = (Trie)malloc(sizeof(struct _trie_matrice)); // Allocations nécessaires
     trie->transition = (int **)malloc(max_node * sizeof(int *));
     trie->finite = (char *)malloc(max_node * sizeof(char));
     trie->suppleant = (int *)malloc(max_node * sizeof(int));
     trie->max_node = max_node;
     trie->next_node = 1;
-    for (i = 0; i < max_node; i++) { // Initialisations
+    for (int i = 0; i < max_node; i++) { // Initialisations
         trie->suppleant[i] = -1; // Initialiser les états de suppléance
         trie->transition[i] = (int *)malloc(256 * sizeof(int));
-        for (j = 0; j < 256; j++) {
+        for (int j = 0; j < 256; j++) {
             trie->transition[i][j] = -1; // Initialiser la matrice à -1
         }
         trie->finite[i] = 0; // Tous les états sont non terminaux
@@ -127,10 +125,10 @@ void completer_trie(Trie trie) {
 
 
 Trans recuperer_transition(Trie trie, int est_racine, int origine) {
-    int est_racine = est_racine ? -1 : 0;
+    int dest_est_racine = est_racine ? -1 : 0;
     Trans transitions = NULL, copie;
     for (int i = 0; i < 256; i++) {
-        if (trie->transition[origine][i] > est_racine) { // Ajouter la transition à la liste
+        if (trie->transition[origine][i] > dest_est_racine) { // Ajouter la transition à la liste
             copie = (Trans)malloc(sizeof(struct _transition));
             copie->origine = origine;
             copie->letter = i;
@@ -153,38 +151,39 @@ void complete(Trie trie) {
     int origine=0, vers=0, s=0;
         
     /* Création de la file */
-    Queue queue = createQueue();
+    Queue queue = create_queue();
     /* Avoir les transition de la racine */
-    Trans transitions = avoirTrans(trie, 0, 0);
+    Trans transitions = recuperer_transition(trie, 0, 0);
     /* Fonction de supp pour les fils de la racine 'sons of the root '*/
     while (transitions != NULL) {
         vers = transitions->vers;
         transitions = transitions->prochain;
         /* inserer dans la file */
-        insert_queue(queue, vers);
+        ajout_valeur(queue, vers);
         /* Destination = racine*/
         trie->suppleant[vers] = 0;
     }
     /* Récupérer les element a partir de la file, et exectuer la fonction de supp */
     while (queue->taille != 0) {
-        origine = recupQueue(queue);
-        transitions = avoirTrans(trie, 1, origine);
+        origine = recuperer_valeur(queue);
+        transitions = recuperer_transition(trie, 1, origine);
         while (transitions != NULL) {
-        origine = transitions->origine;
-        c = transitions->letter;
-        vers = transitions->vers;
-        transitions = transitions->prochain;
-        insert_queue(queue, vers);
+            origine = transitions->origine;
+            c = transitions->letter;
+            vers = transitions->vers;
+            transitions = transitions->prochain;
+            ajout_valeur(queue, vers);
 
-        s = trie->suppleant[origine];
-        /* Transition no définie */
-        while (destination_transition(trie, s, c) == -1) {
-            s = trie->suppleant[s];
-        }
-        trie->suppleant[vers] = destination_transition(trie, s, c);
-        // Fonction de sortie
-        if (trie->finite[trie->suppleant[vers]]) {
-            trie->finite[vers] = 1;}
+            s = trie->suppleant[origine];
+            /* Transition no définie */
+            while (destination_transition(trie, s, c) == -1) {
+                s = trie->suppleant[s];
+            }
+            trie->suppleant[vers] = destination_transition(trie, s, c);
+            // Fonction de sortie
+            if (trie->finite[trie->suppleant[vers]]) {
+                trie->finite[vers] = 1;
+            }
         }
     }
     

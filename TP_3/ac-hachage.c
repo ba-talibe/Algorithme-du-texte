@@ -10,9 +10,9 @@ typedef struct _trie_hachage *Trie;
 
 
 
-void ajout_noeud(List *list, unsigned char c, int noeud) {
+void ajout_noeud(List *list, unsigned char caractere, int noeud) {
     List copie = (List)malloc(sizeof(struct _list));
-    copie->letter = c;	
+    copie->letter = caractere;	
     copie->target_node = noeud;
    
 
@@ -42,6 +42,9 @@ Queue create_queue() {
 }
 
 void ajout_valeur(Queue queue, int valeur) {
+    /*
+        Ajoute une valeur à la file
+    */
     if (queue->taille == 0) {
         queue->fin = (Element)malloc(sizeof(struct _element));
         queue->fin->valeur = valeur;
@@ -99,7 +102,6 @@ void insert_trie(Trie trie, unsigned char *w) {
     int noeud_courant = 0;
     int copie;
 
-    
     int j;
     for (j = 0; w[j] != '\0'; j++) {}
 
@@ -151,15 +153,14 @@ void completer_trie(Trie trie) {
 
 
 Trans recuperer_transition(Trie trie,  int est_racine, int origine) {
-    int est_racine;
+    int dest_est_racine = est_racine ? -1 : 0;
 
-    if (est_racine) {est_racine = -1;} else {est_racine = 0;}
     //  Initialisation de la liste des transitions 
     Trans trans = NULL;
     List list = trie->transition[origine];
     // Récuperation et ajout des transition de la liste 
     while (list != NULL) {
-        if (list->target_node > est_racine) {
+        if (list->target_node > dest_est_racine) {
             Trans copie = (Trans)malloc(sizeof(struct _transition));
             copie->vers = list->target_node;
             copie->origine = origine;
@@ -172,16 +173,16 @@ Trans recuperer_transition(Trie trie,  int est_racine, int origine) {
     return trans;
 }
 
-int destination_transition(Trie trie, int org, unsigned char c) {
-    if (org == -1) {return 0;}
-    List list = trie->transition[org]; // Récupération de la liste des transitions
-    return rechercher_noeud(list, c);    // Recherche de la destination
+int destination_transition(Trie trie, int origine, unsigned char caractere) {
+    if (origine == -1) {return 0;}
+    List list = trie->transition[origine]; // Récupération de la liste des transitions
+    return rechercher_noeud(list, caractere);    // Recherche de la destination
 }
 
 
 void complete(Trie trie) {
-    unsigned char c;
-    int org=0, vers=0, s=0;
+    unsigned char caractere;
+    int origine=0, vers=0, s=0;
    
     // recuperation des transitions de la racine
     Trans transitions = recuperer_transition(trie, 0, 0);
@@ -200,21 +201,21 @@ void complete(Trie trie) {
     }
     // execution de la fonction de supppleance sur elements de la file
     while (queue->taille != 0) {
-        org = recuperer_valeur(queue);
-        transitions = recuperer_transition(trie, 1, org);
+        origine = recuperer_valeur(queue);
+        transitions = recuperer_transition(trie, 1, origine);
         while (transitions != NULL) {
-            org = transitions->origine;
-            c = transitions->letter;
+            origine = transitions->origine;
+            caractere = transitions->letter;
             vers = transitions->vers;
             transitions = transitions->prochain;
             ajout_valeur(queue, vers);
 
-            s = trie->suppleant[org];
+            s = trie->suppleant[origine];
             /* Transition non définie */
-            while (destination_transition(trie, s, c) == -1) {
+            while (destination_transition(trie, s, caractere) == -1) {
                 s = trie->suppleant[s];
             }
-            trie->suppleant[vers] = destination_transition(trie, s, c);
+            trie->suppleant[vers] = destination_transition(trie, s, caractere);
             /* Fonction de sortie */
             if (trie->finite[trie->suppleant[vers]]) {
                 trie->finite[vers] = 1;
